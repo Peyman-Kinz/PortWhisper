@@ -37,28 +37,59 @@ def scan_ports():
         thread.start()
 
 def show_help():
-    help_text.set("PortGhost ist ein einfaches Tool zum Scannen von Ports auf einem \nZielrechner.\n "
-                  "Du kannst einen Hostnamen oder eine IP-Adresse eingeben und einen \nPortbereich definieren.\n "
-                  "PortGhost wird dann versuchen, die angegebenen Ports auf Erreichbarkeit \nzu überprüfen und\n "
-                  "dir mitteilen, welche Ports offen oder geschlossen sind. Du kannst die \nErgebnisse in Echtzeit \nauf dem Bildschirm sehen.\n")
+    help_text.set("")
 
 def on_tab_change(event):
     current_tab = notebook.index(notebook.select())
     if current_tab == 1:
         show_help()
 
+def enable_dark_mode():
+    style = ttk.Style()
+    style.configure("TFrame", background="grey")
+    style.configure("TEntry", foreground="black")
+    style.configure("TText", foreground="black")
+    style.configure("TEntry", fieldbackground="grey")
+    style.configure("TText", fieldbackground="grey")
+    style.configure("TButton", background="grey", foreground="black")
+    dark_button.configure(state=tk.DISABLED)
+    white_button.configure(state=tk.NORMAL)
+
+def enable_white_mode():
+    main_frame_canvas.configure(bg="white")
+    help_frame_canvas.configure(bg="white")
+    settings_frame_canvas.configure(bg="white")
+    about_frame_canvas.configure(bg="white")
+    entry.configure(bg="white", fg="black")
+    port_entry.configure(bg="white", fg="black")
+    result_text.configure(bg="white", fg="black")
+    scan_button.configure(bg="white", fg="black")
+    cancel_button.configure(bg="white", fg="black")
+    dark_button.configure(state=tk.NORMAL)
+    white_button.configure(state=tk.DISABLED)
+    style = ttk.Style()
+    style.configure("TFrame", background="white")
+    style.configure("TEntry", foreground="black")
+    style.configure("TText", foreground="black")
+    style.configure("TEntry", fieldbackground="white")
+    style.configure("TText", fieldbackground="white")
+    style.configure("TButton", background="white", foreground="black")
+
 root = tk.Tk()
 root.title("PortGhost")
 root.geometry("800x600")
+root.configure(bg="white")  # Hinzugefügt, um die Hintergrundfarbe auf Weiß zu setzen
 
 notebook = ttk.Notebook(root)
 notebook.pack(fill="both", expand=True)
 
 main_frame = ttk.Frame(notebook)
 help_frame = ttk.Frame(notebook)
+settings_frame = ttk.Frame(notebook)
+about_frame = ttk.Frame(notebook)
 
 notebook.add(main_frame, text="Hauptseite")
-notebook.add(help_frame, text="Hilfe")
+notebook.add(settings_frame, text="Einstellungen")
 
 style = ttk.Style()
 style.configure("open.TLabel", foreground="green")
@@ -70,7 +101,7 @@ label.pack(pady=20)
 entry = tk.Entry(main_frame, font=("Helvetica", 14))
 entry.pack(padx=20, pady=10)
 
-port_label = tk.Label(main_frame, text="Portbereich (z.B. 80-100):", font=("Helvetica", 14))
+port_label = tk.Label(main_frame, text="Portbereich (80-100):", font=("Helvetica", 14))
 port_label.pack(padx=20, pady=10)
 
 port_entry = tk.Entry(main_frame, font=("Helvetica", 14))
@@ -92,6 +123,22 @@ help_text = tk.StringVar()
 help_label = tk.Label(help_frame, textvariable=help_text, font=("Helvetica", 14))
 help_label.pack()
 
-notebook.bind("<<NotebookTabChanged>>", on_tab_change)
+main_frame_canvas = tk.Canvas(main_frame, bg="white")
+main_frame_canvas.pack(fill="both", expand=True)
+help_frame_canvas = tk.Canvas(help_frame, bg="white")
+help_frame_canvas.pack(fill="both", expand=True)
+settings_frame_canvas = tk.Canvas(settings_frame, bg="white")
+settings_frame_canvas.pack(fill="both", expand=True)
+about_frame_canvas = tk.Canvas(about_frame, bg="white")
+about_frame_canvas.pack(fill="both", expand=True)
+
+settings_label = tk.Label(settings_frame, text="Einstellungen", font=("Helvetica", 24))
+settings_label.pack(pady=20)
+
+dark_button = tk.Button(settings_frame, text="Grey Modus", command=enable_dark_mode)
+dark_button.pack(pady=10)
+
+white_button = tk.Button(settings_frame, text="White Modus", command=enable_white_mode)
+white_button.pack(pady=10)
 
 root.mainloop()
