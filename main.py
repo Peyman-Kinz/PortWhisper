@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 import socket
 import threading
+import paramiko
+import http.client
 
 def cancel_scan():
     global scan_cancelled
@@ -28,15 +30,22 @@ def scan_ports():
             elif scan_type == "UDP":
                 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 result = sock.connect_ex((target_ip, port))
+            elif scan_type == "HTTP":
+                conn = http.client.HTTPConnection(target_ip, port, timeout=1)
+                conn.request("GET", "/")
+                response = conn.getresponse()
+                result = response.status
+                conn.close()
             else:
                 result_text.insert(tk.END, "Ungültiger Scan-Typ")
                 return
 
             if result == 0:
                 result_text.insert(tk.END, f"(Port {port} ist offen.)\n", "open")
+            elif result == 200:
+                result_text.insert(tk.END, f"(Port {port} ist ein HTTP-Server und geöffnet.)\n", "open")
             else:
                 result_text.insert(tk.END, f"(Port {port} ist geschlossen.)\n", "closed")
-            sock.close()
         except socket.timeout:
             result_text.insert(tk.END, f"(Port {port} hat nicht geantwortet.)\n", "timeout")
 
@@ -50,15 +59,9 @@ def scan_ports():
         thread = threading.Thread(target=do_scan, args=(port, scan_name))
         thread.start()
 
+
 def show_help():
-    help_text.set("PortGhost ist ein einfaches Tool zum Scannen von Ports auf einem \n"
-                  "Zielrechner.\n "
-                  "Du kannst einen Hostnamen oder eine IP-Adresse eingeben und einen \n"
-                  "Portbereich definieren. Wähle den Scan-Typ aus und klicke auf 'Scan starten'.\n"
-                  "PortGhost wird dann versuchen, die angegebenen Ports auf Erreichbarkeit \n"
-                  "zu überprüfen und\n "
-                  "dir mitteilen, welche Ports offen, geschlossen oder nicht antwortend sind. Du kannst die \n"
-                  "Ergebnisse in Echtzeit \nauf dem Bildschirm sehen.\n")
+    help_text.set("")
 
 def on_tab_change(event):
     current_tab = notebook.index(notebook.select())
@@ -73,7 +76,7 @@ def enable_dark_mode():
     style.configure("TButton", background="grey", foreground="black")
     dark_button.configure(state=tk.DISABLED)
     white_button.configure(state=tk.NORMAL)
-    scan_button.configure(bg="blue", fg="white")
+    scan_button.configure(bg="grey", fg="white")
 
 def enable_white_mode():
     main_frame_canvas.configure(bg="white")
@@ -119,7 +122,7 @@ label.pack(pady=20)
 entry = tk.Entry(main_frame, font=("Helvetica", 14))
 entry.pack(padx=20, pady=10)
 
-port_label = tk.Label(main_frame, text="Portbereich (80-100):", font=("Helvetica", 14))
+port_label = tk.Label(main_frame, text="Portbereich (bsp. 80-100):", font=("Helvetica", 14))
 port_label.pack(padx=20, pady=10)
 
 port_entry = tk.Entry(main_frame, font=("Helvetica", 14))
@@ -156,21 +159,26 @@ settings_label.pack(pady=20)
 
 scan_type_var = tk.IntVar()
 scan_type_var.set(0)  # Default: TCP-Scan
-scan_types = {0: "TCP", 1: "UDP"}
+scan_types = {0: "TCP", 1: "UDP", 2: "HTTP"}
 
 scan_type_label = tk.Label(settings_frame, text="Scan-Typ:", font=("Helvetica", 14))
 scan_type_label.pack(padx=20, pady=10)
 
 tcp_scan_radio = tk.Radiobutton(settings_frame, text="TCP", variable=scan_type_var, value=0)
 udp_scan_radio = tk.Radiobutton(settings_frame, text="UDP", variable=scan_type_var, value=1)
+http_scan_radio = tk.Radiobutton(settings_frame, text="HTTP", variable=scan_type_var, value=2)
 
 tcp_scan_radio.pack(padx=20, pady=5, anchor="w")
 udp_scan_radio.pack(padx=20, pady=5, anchor="w")
+http_scan_radio.pack(padx=20, pady=5, anchor="w")
 
 dark_button = tk.Button(settings_frame, text="Dark Modus", command=enable_dark_mode)
 dark_button.pack(pady=10)
 
 white_button = tk.Button(settings_frame, text="White Modus", command=enable_white_mode)
 white_button.pack(pady=10)
+
+crack_button = tk.Button(main_frame, text="Start Password Cracking", command=perform_password_cracking)
+crack_button.pack()
 
 root.mainloop()
