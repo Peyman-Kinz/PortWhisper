@@ -4,6 +4,7 @@ import socket
 import threading
 import paramiko
 import http.client
+import subprocess
 
 def cancel_scan():
     global scan_cancelled
@@ -59,7 +60,6 @@ def scan_ports():
         thread = threading.Thread(target=do_scan, args=(port, scan_name))
         thread.start()
 
-
 def show_help():
     help_text.set("")
 
@@ -68,29 +68,6 @@ def on_tab_change(event):
     if current_tab == 1:
         show_help()
 
-def enable_dark_mode():
-    style = ttk.Style()
-    style.configure("TFrame", background="grey")
-    style.configure("TEntry", foreground="black", fieldbackground="grey", bordercolor="grey")
-    style.configure("TText", foreground="black", fieldbackground="grey", bordercolor="grey")
-    style.configure("TButton", background="grey", foreground="black")
-    scan_button.configure(bg="grey", fg="white")
-
-def enable_white_mode():
-    main_frame_canvas.configure(bg="white")
-    help_frame_canvas.configure(bg="white")
-    settings_frame_canvas.configure(bg="white")
-    about_frame_canvas.configure(bg="white")
-    entry.configure(bg="white", fg="black", highlightbackground="white")
-    port_entry.configure(bg="white", fg="black", highlightbackground="white")
-    result_text.configure(bg="white", fg="black")
-    scan_button.configure(bg="white", fg="black")
-    cancel_button.configure(bg="white", fg="black")
-    style = ttk.Style()
-    style.configure("TFrame", background="white")
-    style.configure("TEntry", foreground="black", fieldbackground="white", bordercolor="white")
-    style.configure("TText", foreground="black", fieldbackground="white", bordercolor="white")
-    style.configure("TButton", background="white", foreground="black")
 
 root = tk.Tk()
 root.title("PortGhost")
@@ -104,10 +81,11 @@ main_frame = ttk.Frame(notebook)
 help_frame = ttk.Frame(notebook)
 settings_frame = ttk.Frame(notebook)
 about_frame = ttk.Frame(notebook)
+ping_frame = ttk.Frame(notebook)
 
-notebook.add(main_frame, text="Hauptseite")
+notebook.add(main_frame, text="Scan Ports")
+notebook.add(ping_frame, text="Ping")
 notebook.add(settings_frame, text="Einstellungen")
-notebook.add(about_frame, text="About")
 
 style = ttk.Style()
 style.configure("open.TLabel", foreground="green")
@@ -168,5 +146,45 @@ http_scan_radio = tk.Radiobutton(settings_frame, text="HTTP", variable=scan_type
 tcp_scan_radio.pack(padx=20, pady=5, anchor="w")
 udp_scan_radio.pack(padx=20, pady=5, anchor="w")
 http_scan_radio.pack(padx=20, pady=5, anchor="w")
+
+ping_label = tk.Label(ping_frame, text="Ping-Anfrage senden:", font=("Helvetica", 14))
+ping_label.pack(pady=20)
+
+ping_address_label = tk.Label(ping_frame, text="Ping-Adresse:", font=("Helvetica", 12))
+ping_address_label.pack(padx=20, pady=10)
+
+ping_address_entry = tk.Entry(ping_frame, font=("Helvetica", 12))
+ping_address_entry.pack(padx=20, pady=10)
+
+ping_command_label = tk.Label(ping_frame, text="Ping-Befehl (optional):", font=("Helvetica", 12))
+ping_command_label.pack(padx=20, pady=10)
+
+ping_command_entry = tk.Entry(ping_frame, font=("Helvetica", 12))
+ping_command_entry.pack(padx=20, pady=10)
+
+ping_start_button = tk.Button(ping_frame, text="Ping starten", command=ping_frame)
+ping_start_button.pack()
+
+end_ping_button = tk.Button(ping_frame, text="Ping Anfrage abbrechen", command=ping_frame)
+end_ping_button.pack()
+
+
+ping_result_text = tk.Text(ping_frame, font=("Helvetica", 14))
+ping_result_text.pack(padx=20, pady=20, fill='both', expand=True)
+
+def send_ping_request():
+    address = ping_address_entry.get()
+    command = ping_command_entry.get()
+    if command:
+        ping_command = f"ping {command} {address}"
+    else:
+        ping_command = f"ping {address}"
+
+    ping_result_text.delete("1.0", tk.END)
+    try:
+        ping_response = subprocess.check_output(ping_command, shell=True, text=True, stderr=subprocess.STDOUT)
+        ping_result_text.insert(tk.END, ping_response)
+    except subprocess.CalledProcessError as e:
+        ping_result_text.insert(tk.END, e.output)
 
 root.mainloop()
