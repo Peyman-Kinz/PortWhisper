@@ -74,8 +74,6 @@ def enable_dark_mode():
     style.configure("TEntry", foreground="black", fieldbackground="grey", bordercolor="grey")
     style.configure("TText", foreground="black", fieldbackground="grey", bordercolor="grey")
     style.configure("TButton", background="grey", foreground="black")
-    dark_button.configure(state=tk.DISABLED)
-    white_button.configure(state=tk.NORMAL)
     scan_button.configure(bg="grey", fg="white")
 
 def enable_white_mode():
@@ -88,8 +86,6 @@ def enable_white_mode():
     result_text.configure(bg="white", fg="black")
     scan_button.configure(bg="white", fg="black")
     cancel_button.configure(bg="white", fg="black")
-    dark_button.configure(state=tk.NORMAL)
-    white_button.configure(state=tk.DISABLED)
     style = ttk.Style()
     style.configure("TFrame", background="white")
     style.configure("TEntry", foreground="black", fieldbackground="white", bordercolor="white")
@@ -111,12 +107,13 @@ about_frame = ttk.Frame(notebook)
 
 notebook.add(main_frame, text="Hauptseite")
 notebook.add(settings_frame, text="Einstellungen")
+notebook.add(about_frame, text="About")
 
 style = ttk.Style()
 style.configure("open.TLabel", foreground="green")
 style.configure("closed.TLabel", foreground="red")
 
-label = tk.Label(main_frame, text="PortGhost", font=("Helvetica", 24))
+label = tk.Label(main_frame, text="Enter IP Adress:", font=("Helvetica", 24))
 label.pack(pady=20)
 
 entry = tk.Entry(main_frame, font=("Helvetica", 14))
@@ -171,14 +168,5 @@ http_scan_radio = tk.Radiobutton(settings_frame, text="HTTP", variable=scan_type
 tcp_scan_radio.pack(padx=20, pady=5, anchor="w")
 udp_scan_radio.pack(padx=20, pady=5, anchor="w")
 http_scan_radio.pack(padx=20, pady=5, anchor="w")
-
-dark_button = tk.Button(settings_frame, text="Dark Modus", command=enable_dark_mode)
-dark_button.pack(pady=10)
-
-white_button = tk.Button(settings_frame, text="White Modus", command=enable_white_mode)
-white_button.pack(pady=10)
-
-crack_button = tk.Button(main_frame, text="Start Password Cracking", command=perform_password_cracking)
-crack_button.pack()
 
 root.mainloop()
