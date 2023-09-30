@@ -6,6 +6,11 @@ import paramiko
 import http.client
 import subprocess
 
+def cancel_ping():
+    global ping_cancelled
+    ping_cancelled = True
+    ping_result_text.insert(tk.END, "Ping abgebrochen\n")
+
 def cancel_scan():
     global scan_cancelled
     scan_cancelled = True
@@ -165,7 +170,7 @@ ping_command_entry.pack(padx=20, pady=10)
 ping_start_button = tk.Button(ping_frame, text="Ping starten", command=ping_frame)
 ping_start_button.pack()
 
-end_ping_button = tk.Button(ping_frame, text="Ping Anfrage abbrechen", command=ping_frame)
+end_ping_button = tk.Button(ping_frame, text="Ping Anfrage abbrechen", command=cancel_ping)
 end_ping_button.pack()
 
 
