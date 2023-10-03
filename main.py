@@ -6,6 +6,7 @@ import paramiko
 import http.client
 import subprocess
 import codecs
+import re
 
 ping_process = None
 
@@ -68,18 +69,23 @@ def scan_ports():
     for port in range(start_port, end_port + 1):
         thread = threading.Thread(target=do_scan, args=(port, scan_name))
         thread.start()
-
 def send_ping_request():
     global ping_process
     target_ip = ping_address_entry.get()
     ping_result_text.delete("1.0", tk.END)
+
+    # Überprüfen, ob die eingegebene Zeichenfolge eine gültige IP-Adresse ist
+    if not re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', target_ip):
+        ping_result_text.insert(tk.END, "Ungültige IP-Adresse\n")
+        return
 
     try:
         ping_process = subprocess.Popen(
             ["ping", "-c", "4", target_ip],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True
+            text=True,
+            encoding='utf-8'
         )
         ping_output, ping_error = ping_process.communicate(timeout=10)
 
