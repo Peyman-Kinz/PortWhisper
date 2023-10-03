@@ -5,11 +5,15 @@ import threading
 import paramiko
 import http.client
 import subprocess
+import codecs
+
+ping_process = None
 
 def cancel_ping():
-    global ping_cancelled
-    ping_cancelled = True
-    ping_result_text.insert(tk.END, "Ping abgebrochen\n")
+    global ping_process
+    if ping_process:
+        ping_process.terminate()
+        ping_result_text.insert(tk.END, "Ping abgebrochen\n")
 
 def cancel_scan():
     global scan_cancelled
@@ -65,14 +69,30 @@ def scan_ports():
         thread = threading.Thread(target=do_scan, args=(port, scan_name))
         thread.start()
 
-def show_help():
-    help_text.set("")
+def send_ping_request():
+    global ping_process
+    target_ip = ping_address_entry.get()
+    ping_result_text.delete("1.0", tk.END)
 
-def on_tab_change(event):
-    current_tab = notebook.index(notebook.select())
-    if current_tab == 1:
-        show_help()
+    try:
+        ping_process = subprocess.Popen(
+            ["ping", "-c", "4", target_ip],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        ping_output, ping_error = ping_process.communicate(timeout=10)
 
+        if ping_process.returncode == 0:
+            response_text = f"Antwort von {target_ip}:\n{ping_output}"
+        else:
+            response_text = "Nicht möglich"
+
+        ping_result_text.insert(tk.END, response_text)
+    except subprocess.TimeoutExpired:
+        ping_result_text.insert(tk.END, "Ping-Anfrage abgebrochen (Zeitüberschreitung)\n")
+    except Exception as e:
+        ping_result_text.insert(tk.END, f"Fehler beim Senden der Ping-Anfrage: {str(e)}\n")
 
 root = tk.Tk()
 root.title("PortGhost")
@@ -161,35 +181,13 @@ ping_address_label.pack(padx=20, pady=10)
 ping_address_entry = tk.Entry(ping_frame, font=("Helvetica", 12))
 ping_address_entry.pack(padx=20, pady=10)
 
-ping_command_label = tk.Label(ping_frame, text="Ping-Befehl (optional):", font=("Helvetica", 12))
-ping_command_label.pack(padx=20, pady=10)
-
-ping_command_entry = tk.Entry(ping_frame, font=("Helvetica", 12))
-ping_command_entry.pack(padx=20, pady=10)
-
-ping_start_button = tk.Button(ping_frame, text="Ping starten", command=ping_frame)
+ping_start_button = tk.Button(ping_frame,  text="Ping starten", command=send_ping_request)
 ping_start_button.pack()
 
 end_ping_button = tk.Button(ping_frame, text="Ping Anfrage abbrechen", command=cancel_ping)
 end_ping_button.pack()
 
-
 ping_result_text = tk.Text(ping_frame, font=("Helvetica", 14))
 ping_result_text.pack(padx=20, pady=20, fill='both', expand=True)
-
-def send_ping_request():
-    address = ping_address_entry.get()
-    command = ping_command_entry.get()
-    if command:
-        ping_command = f"ping {command} {address}"
-    else:
-        ping_command = f"ping {address}"
-
-    ping_result_text.delete("1.0", tk.END)
-    try:
-        ping_response = subprocess.check_output(ping_command, shell=True, text=True, stderr=subprocess.STDOUT)
-        ping_result_text.insert(tk.END, ping_response)
-    except subprocess.CalledProcessError as e:
-        ping_result_text.insert(tk.END, e.output)
 
 root.mainloop()
