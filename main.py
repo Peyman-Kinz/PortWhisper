@@ -101,7 +101,7 @@ def send_ping_request():
         ping_result_text.insert(tk.END, f"Fehler beim Senden der Ping-Anfrage: {str(e)}\n")
 
 root = tk.Tk()
-root.title("PortGhost")
+root.title("PortWhisper")
 root.geometry("800x600")
 root.configure(bg="white")
 
