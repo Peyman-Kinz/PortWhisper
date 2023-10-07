@@ -2,19 +2,9 @@ import tkinter as tk
 from tkinter import ttk
 import socket
 import threading
-import paramiko
 import http.client
-import subprocess
-import codecs
-import re
 
-ping_process = None
-
-def cancel_ping():
-    global ping_process
-    if ping_process:
-        ping_process.terminate()
-        ping_result_text.insert(tk.END, "Ping abgebrochen\n")
+scan_cancelled = False
 
 def cancel_scan():
     global scan_cancelled
@@ -22,6 +12,9 @@ def cancel_scan():
     result_text.insert(tk.END, "Scan beendet.\n")
 
 def scan_ports():
+    global scan_cancelled
+    scan_cancelled = False
+    
     target = entry.get()
     result_text.delete("1.0", tk.END)
     port_range = port_entry.get().split('-')
@@ -58,7 +51,8 @@ def scan_ports():
             else:
                 result_text.insert(tk.END, f"(Port {port} ist geschlossen.)\n", "closed")
         except socket.timeout:
-            result_text.insert(tk.END, f"(Port {port} hat nicht geantwortet.)\n", "timeout")
+            if not scan_cancelled:
+                result_text.insert(tk.END, f"(Port {port} hat nicht geantwortet.)\n", "timeout")
 
     start_port = int(port_range[0])
     end_port = int(port_range[1]) if len(port_range) > 1 else start_port
@@ -67,41 +61,24 @@ def scan_ports():
     scan_name = scan_types[selected_scan]
 
     for port in range(start_port, end_port + 1):
+        if scan_cancelled:
+            break
+        
         thread = threading.Thread(target=do_scan, args=(port, scan_name))
         thread.start()
-def send_ping_request():
-    global ping_process
-    target_ip = ping_address_entry.get()
-    ping_result_text.delete("1.0", tk.END)
 
-    # Überprüfen, ob die eingegebene Zeichenfolge eine gültige IP-Adresse ist
-    if not re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', target_ip):
-        ping_result_text.insert(tk.END, "Ungültige IP-Adresse\n")
-        return
-
+def resolve_hostname():
+    hostname = entry.get()
     try:
-        ping_process = subprocess.Popen(
-            ["ping", "-c", "4", target_ip],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding='utf-8'
-        )
-        ping_output, ping_error = ping_process.communicate(timeout=10)
-
-        if ping_process.returncode == 0:
-            response_text = f"Antwort von {target_ip}:\n{ping_output}"
-        else:
-            response_text = "Nicht möglich"
-
-        ping_result_text.insert(tk.END, response_text)
-    except subprocess.TimeoutExpired:
-        ping_result_text.insert(tk.END, "Ping-Anfrage abgebrochen (Zeitüberschreitung)\n")
-    except Exception as e:
-        ping_result_text.insert(tk.END, f"Fehler beim Senden der Ping-Anfrage: {str(e)}\n")
+        ip_address = socket.gethostbyname(hostname)
+        result_text.delete("1.0", tk.END)
+        result_text.insert(tk.END, f"Die IP-Adresse für {hostname} ist {ip_address}\n")
+    except socket.gaierror:
+        result_text.delete("1.0", tk.END)
+        result_text.insert(tk.END, "Ungültiger Hostname\n")
 
 root = tk.Tk()
-root.title("PortWhisper")
+root.title("Port Scanner")
 root.geometry("800x600")
 root.configure(bg="white")
 
@@ -109,36 +86,39 @@ notebook = ttk.Notebook(root)
 notebook.pack(fill="both", expand=True)
 
 main_frame = ttk.Frame(notebook)
-help_frame = ttk.Frame(notebook)
 settings_frame = ttk.Frame(notebook)
-about_frame = ttk.Frame(notebook)
-ping_frame = ttk.Frame(notebook)
 
 notebook.add(main_frame, text="Scan Ports")
-notebook.add(ping_frame, text="Ping")
 notebook.add(settings_frame, text="Einstellungen")
 
 style = ttk.Style()
 style.configure("open.TLabel", foreground="green")
 style.configure("closed.TLabel", foreground="red")
 
-label = tk.Label(main_frame, text="Enter IP Adress:", font=("Helvetica", 24))
+label = tk.Label(main_frame, text="IP-Adresse eingeben:", font=("Helvetica", 14))
 label.pack(pady=20)
 
-entry = tk.Entry(main_frame, font=("Helvetica", 14))
+entry = tk.Entry(main_frame, font=("Helvetica", 12))
 entry.pack(padx=20, pady=10)
 
 port_label = tk.Label(main_frame, text="Portbereich (bsp. 80-100):", font=("Helvetica", 14))
 port_label.pack(padx=20, pady=10)
 
-port_entry = tk.Entry(main_frame, font=("Helvetica", 14))
+port_entry = tk.Entry(main_frame, font=("Helvetica", 12))
 port_entry.pack(padx=20, pady=10)
 
-scan_button = tk.Button(main_frame, text="Scan starten", command=scan_ports)
-scan_button.pack()
+# Buttons nebeneinander platzieren
+button_frame = tk.Frame(main_frame)
+button_frame.pack(pady=10)
 
-cancel_button = tk.Button(main_frame, text="Scan beenden", command=cancel_scan)
-cancel_button.pack()
+scan_button = tk.Button(button_frame, text="Scan starten", command=scan_ports)
+scan_button.pack(side=tk.LEFT, padx=10)
+
+cancel_button = tk.Button(button_frame, text="Scan beenden", command=cancel_scan)
+cancel_button.pack(side=tk.LEFT, padx=10)
+
+resolve_button = tk.Button(button_frame, text="Hostname auflösen", command=resolve_hostname)
+resolve_button.pack(side=tk.LEFT, padx=10)
 
 result_text = tk.Text(main_frame, font=("Helvetica", 14))
 result_text.pack(padx=20, pady=20, fill='both', expand=True)
@@ -146,19 +126,6 @@ result_text.pack(padx=20, pady=20, fill='both', expand=True)
 result_text.tag_configure("open", foreground="green")
 result_text.tag_configure("closed", foreground="red")
 result_text.tag_configure("timeout", foreground="orange")
-
-help_text = tk.StringVar()
-help_label = tk.Label(help_frame, textvariable=help_text, font=("Helvetica", 14))
-help_label.pack()
-
-main_frame_canvas = tk.Canvas(main_frame, bg="white")
-main_frame_canvas.pack(fill="both", expand=True)
-help_frame_canvas = tk.Canvas(help_frame, bg="white")
-help_frame_canvas.pack(fill="both", expand=True)
-settings_frame_canvas = tk.Canvas(settings_frame, bg="white")
-settings_frame_canvas.pack(fill="both", expand=True)
-about_frame_canvas = tk.Canvas(about_frame, bg="white")
-about_frame_canvas.pack(fill="both", expand=True)
 
 settings_label = tk.Label(settings_frame, text="Einstellungen", font=("Helvetica", 24))
 settings_label.pack(pady=20)
@@ -177,23 +144,5 @@ http_scan_radio = tk.Radiobutton(settings_frame, text="HTTP", variable=scan_type
 tcp_scan_radio.pack(padx=20, pady=5, anchor="w")
 udp_scan_radio.pack(padx=20, pady=5, anchor="w")
 http_scan_radio.pack(padx=20, pady=5, anchor="w")
-
-ping_label = tk.Label(ping_frame, text="Ping-Anfrage senden:", font=("Helvetica", 14))
-ping_label.pack(pady=20)
-
-ping_address_label = tk.Label(ping_frame, text="Ping-Adresse:", font=("Helvetica", 12))
-ping_address_label.pack(padx=20, pady=10)
-
-ping_address_entry = tk.Entry(ping_frame, font=("Helvetica", 12))
-ping_address_entry.pack(padx=20, pady=10)
-
-ping_start_button = tk.Button(ping_frame,  text="Ping starten", command=send_ping_request)
-ping_start_button.pack()
-
-end_ping_button = tk.Button(ping_frame, text="Ping Anfrage abbrechen", command=cancel_ping)
-end_ping_button.pack()
-
-ping_result_text = tk.Text(ping_frame, font=("Helvetica", 14))
-ping_result_text.pack(padx=20, pady=20, fill='both', expand=True)
 
 root.mainloop()
