@@ -8,13 +8,6 @@ PortWhisper is a Python-based graphical user interface (GUI) application that al
 - Clicking the "Scan starten" button initiates the port scanning process.
 - Results are displayed in real-time, indicating whether each scanned port is open, closed, or unresponsive.
 
-## Ping
-- Users can enter an IP address in the "Ping-Adresse" field.
-- Clicking the "Ping starten" button sends a ping request to the specified IP address.
-- The response, if received, is displayed as "Antwort von [IP address]: [ping output]".
-- If there is no response or the request times out, it displays "Nicht möglich".
-- Users can cancel an ongoing ping request using the "Ping Anfrage abbrechen" button.
-
 ## Additional Features
 - The application uses the tkinter library for the graphical interface.
 - Tabs are used to separate the "Scan Ports" and "Ping" functionalities.
