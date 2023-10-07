@@ -1,17 +1,19 @@
 #PortWhisper
 
-PortWhisper is a Python-based graphical user interface (GUI) application that allows users to perform two main network tasks:
+#Funktionalitäten
 
-## Scan Ports
-- Users can enter an IP address and a range of ports (e.g., 80-100) to scan.
-- They can select a scan type (TCP, UDP, or HTTP) from the settings.
-- Clicking the "Scan starten" button initiates the port scanning process.
-- Results are displayed in real-time, indicating whether each scanned port is open, closed, or unresponsive.
+Der Benutzer kann eine IP-Adresse oder einen Hostnamen eingeben.
+Der Benutzer kann einen Portbereich (z.B. "80-100") eingeben, den er scannen möchte.
+Der Benutzer kann auswählen, welchen Typ von Port-Scan er durchführen möchte (TCP, UDP oder HTTP).
+Das Programm führt den Port-Scan auf den angegebenen Ports durch und zeigt den Status der Ports (offen, geschlossen, Timeout) in einem Textfeld an.
+Der Benutzer kann den Scan jederzeit abbrechen.
+Das Programm kann auch den eingegebenen Hostnamen in eine IP-Adresse auflösen und das Ergebnis anzeigen.
 
-## Additional Features
-- The application uses the tkinter library for the graphical interface.
-- Tabs are used to separate the "Scan Ports" and "Ping" functionalities.
-- Users can configure the scan type (TCP, UDP, or HTTP) in the "Einstellungen" tab.
-- The application provides real-time feedback in the "Scan Ports" tab with color-coded labels for open, closed, and unresponsive ports.
+#Anleitung zur Verwendung
 
-This tool simplifies the process of network port scanning and ping testing, making it accessible to users through an intuitive graphical interface.
+Geben Sie die IP-Adresse oder den Hostnamen des Zielrechners in das entsprechende Eingabefeld ein.
+Geben Sie den Portbereich ein, den Sie scannen möchten (z.B. "80-100").
+Wählen Sie den Scan-Typ aus (TCP, UDP oder HTTP) mithilfe der Radio-Buttons.
+Klicken Sie auf den "Scan starten"-Button, um den Port-Scan zu starten.
+Sie können den Scan jederzeit durch Klicken auf den "Scan beenden"-Button abbrechen.
+Wenn Sie den Hostnamen in eine IP-Adresse auflösen möchten, geben Sie den Hostnamen ein und klicken Sie auf den "Hostname auflösen"-Button.
