@@ -1,6 +1,6 @@
-# PortGhost
+#PortWhisper
 
-PortGhost is a Python-based graphical user interface (GUI) application that allows users to perform two main network tasks:
+PortWhisper is a Python-based graphical user interface (GUI) application that allows users to perform two main network tasks:
 
 ## Scan Ports
 - Users can enter an IP address and a range of ports (e.g., 80-100) to scan.
