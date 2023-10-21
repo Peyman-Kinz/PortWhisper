@@ -1,6 +1,6 @@
-#PortWhisper
+PortMaster
 
-#Funktionalitäten
+# Funktionalitäten
 
 Der Benutzer kann eine IP-Adresse oder einen Hostnamen eingeben.
 Der Benutzer kann einen Portbereich (z.B. "80-100") eingeben, den er scannen möchte.
@@ -9,7 +9,7 @@ Das Programm führt den Port-Scan auf den angegebenen Ports durch und zeigt den 
 Der Benutzer kann den Scan jederzeit abbrechen.
 Das Programm kann auch den eingegebenen Hostnamen in eine IP-Adresse auflösen und das Ergebnis anzeigen.
 
-#Anleitung zur Verwendung
+# Anleitung zur Verwendung
 
 Geben Sie die IP-Adresse oder den Hostnamen des Zielrechners in das entsprechende Eingabefeld ein.
 Geben Sie den Portbereich ein, den Sie scannen möchten (z.B. "80-100").
